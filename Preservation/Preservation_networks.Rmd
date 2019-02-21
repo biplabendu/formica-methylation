@@ -1,0 +1,288 @@
+---
+title: "Changes in gene DNA methylation and expression networks accompany caste specialization and age-related physiological changes in a social insect"
+author: "Morandin et al."
+date: "21/02/2019"
+output:
+  html_document:
+    theme: cerulean
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+library(WGCNA)
+```
+
+# Module preservation
+## Preservation of the co-expression network within the co-methylation network
+### Input both datasets
+```{r preservation1}
+dat0=read.table("Preservation_Expression.txt", header=T)
+head(dat0)
+datSummary=dat0[,c(1:2)]
+datExpr <- t(dat0[3:18])
+no.samples <- dim(datExpr)[[1]]
+dim(datExpr)
+colnames(datExpr) = datSummary$cluster 
+colorsExp = dat0$color
+
+dat=read.table("Preservation_methylation.txt", header=T)
+head(dat)
+datMetSummary=dat[,c(1:2)]
+datMet <- t(dat[3:22])
+no.samples <- dim(datMet)[[1]]
+dim(datMet)
+colnames(datMet) = datMetSummary$cluster 
+colorsMet = dat$color
+```
+
+### Calculation Module preservation
+```{r calculation1}
+setLabels = c("Met", "Exp");
+multiExpr = list(Exp = list(data = datExpr), Met = list(data = datMet));
+multiColor = list(Exp = colorsExp);
+
+system.time( {
+  mp = modulePreservation(multiExpr, multiColor,
+                          referenceNetworks = 1,
+                          nPermutations = 100,
+                          calculateQvalue = TRUE,
+                          randomSeed = 1,
+                          quickCor = 0,
+                          verbose = 3)
+} );
+```
+
+### Save outputs
+```{r save1}
+save(mp, file = "modulePreservation_metExp.RData");
+```
+
+#### Analysis and Display
+```{r display1}
+ref = 1
+test = 2
+statsObs = cbind(mp$quality$observed[[ref]][[test]][, -1], mp$preservation$observed[[ref]][[test]][, -1])
+statsZ = cbind(mp$quality$Z[[ref]][[test]][, -1], mp$preservation$Z[[ref]][[test]][, -1]);
+
+# Compare preservation to quality:
+print( cbind(statsObs[, c("medianRank.pres", "medianRank.qual")],
+             signif(statsZ[, c("Zsummary.pres", "Zsummary.qual")], 2)) )
+
+# Module labels and module sizes are also contained in the results
+modColors = rownames(mp$preservation$observed[[ref]][[test]])
+moduleSizes = mp$preservation$Z[[ref]][[test]][, 1];
+
+# leave grey and gold modules out
+plotMods = !(modColors %in% c("gold","grey"));
+
+# Text labels for points
+text = modColors[plotMods];
+
+# Auxiliary convenience variable
+plotData = cbind(mp$preservation$observed[[ref]][[test]][, 2], mp$preservation$Z[[ref]][[test]][, 2])
+
+# Plot
+mains = c("Preservation Median rank", "Preservation Zsummary");
+sizeGrWindow(10, 5);
+par(mfrow = c(1,2))
+par(mar = c(4.5,4.5,2.5,1))
+for (p in 1:2)
+{
+  min = min(plotData[, p], na.rm = TRUE);
+  max = max(plotData[, p], na.rm = TRUE);
+  # Adjust ploting ranges appropriately
+  if (p==2)
+  {
+    if (min > -max/10) min = -max/10
+    ylim = c(min - 0.1 * (max-min), max + 0.1 * (max-min))
+  } else
+    ylim = c(max + 0.1 * (max-min), min - 0.1 * (max-min))
+  plot(moduleSizes[plotMods], plotData[plotMods, p], col = 1, bg = modColors[plotMods], pch = 21,
+       main = mains[p],
+       cex = 1.4,
+       ylab = mains[p], xlab = "Module size", log = "x",
+       ylim = ylim,
+       xlim = c(1, 4000), cex.lab = 1.2, cex.axis = 1.2, cex.main =1.4)
+  if (p==2) {
+    abline(h=0)
+    abline(h=2, col = "blue", lty = 2)
+    abline(h=10, col = "darkgreen", lty = 2)
+  } }
+```
+
+
+
+## Preservation of the co-methylation network within the co-expression network
+### Calculation Module preservation
+```{r calculation2}
+setLabels = c("Met", "Exp");
+
+multiExpr = list(Met = list(data = datMet),Exp = list(data = datExpr));
+multiColor = list(Met = colorsMet);
+
+system.time( {
+  mp = modulePreservation(multiExpr, multiColor,
+                          referenceNetworks = 1,
+                          nPermutations = 100,
+                          randomSeed = 1,
+                          quickCor = 0,
+                          verbose = 3)
+} );
+```
+
+### Save outputs
+```{r save2}
+save(mp, file = "modulePreservation_metExp_reverse.RData");
+```
+
+#### Analysis and Display
+```{r display2}
+ref = 1
+test = 2
+statsObs = cbind(mp$quality$observed[[ref]][[test]][, -1], mp$preservation$observed[[ref]][[test]][, -1])
+statsZ = cbind(mp$quality$Z[[ref]][[test]][, -1], mp$preservation$Z[[ref]][[test]][, -1]);
+
+# Compare preservation to quality:
+print( cbind(statsObs[, c("medianRank.pres", "medianRank.qual")],
+             signif(statsZ[, c("Zsummary.pres", "Zsummary.qual")], 2)) )
+
+# Module labels and module sizes are also contained in the results
+modColors = rownames(mp$preservation$observed[[ref]][[test]])
+moduleSizes = mp$preservation$Z[[ref]][[test]][, 1];
+
+# leave grey and gold modules out
+plotMods = !(modColors %in% c("gold","grey"));
+
+# Text labels for points
+text = modColors[plotMods];
+
+# Auxiliary convenience variable
+plotData = cbind(mp$preservation$observed[[ref]][[test]][, 2], mp$preservation$Z[[ref]][[test]][, 2])
+
+# Plot
+mains = c("Preservation Median rank", "Preservation Zsummary");
+sizeGrWindow(10, 5);
+par(mfrow = c(1,2))
+par(mar = c(4.5,4.5,2.5,1))
+for (p in 1:2)
+{
+  min = min(plotData[, p], na.rm = TRUE);
+  max = max(plotData[, p], na.rm = TRUE);
+  # Adjust ploting ranges appropriately
+  if (p==2)
+  {
+    if (min > -max/10) min = -max/10
+    ylim = c(min - 0.1 * (max-min), max + 0.1 * (max-min))
+  } else
+    ylim = c(max + 0.1 * (max-min), min - 0.1 * (max-min))
+  plot(moduleSizes[plotMods], plotData[plotMods, p], col = 1, bg = modColors[plotMods], pch = 21,
+       main = mains[p],
+       cex = 1.4,
+       ylab = mains[p], xlab = "Module size", log = "x",
+       ylim = ylim,
+       xlim = c(1, 4000), cex.lab = 1.2, cex.axis = 1.2, cex.main =1.4)
+  if (p==2) {
+    abline(h=0)
+    abline(h=2, col = "blue", lty = 2)
+    abline(h=10, col = "darkgreen", lty = 2)
+  } }
+```
+
+## Preservation of the co-expression network within the Morandin et al. (2016) network
+### Input both datasets
+```{r input2}
+dat0=read.table("Preservation_Morandin2016.txt", header=T)
+head(dat0)
+datSummary=dat0[,c(1:2)]
+datOld <- t(dat0[3:102])
+no.samples <- dim(datOld)[[1]]
+dim(datOld)
+colnames(datOld) = datSummary$cluster 
+colorsOld = dat0$color 
+
+dat=read.table("Preservation_Expression.txt", header=T)
+head(dat)
+datExpSummary=dat[,c(1:2)]
+datExp <- t(dat[3:18])
+no.samples <- dim(datExp)[[1]]
+dim(datExp)
+colnames(datExp) = datExpSummary$cluster 
+colorsExp = dat$color 
+```
+
+### Calculation Module preservation
+```{r calculation3}
+setLabels = c("Old", "Exp");
+multiExpr = list(Old = list(data = datOld), Exp = list(data = datExp));
+multiColor = list(Old = colorsOld);
+
+system.time( {
+  mp = modulePreservation(multiExpr, multiColor,
+                          referenceNetworks = 1,
+                          nPermutations = 100,
+                          calculateQvalue = TRUE,
+                          randomSeed = 1,
+                          quickCor = 0,
+                          verbose = 3)
+} );
+```
+
+### Save outputs
+```{r save3}
+save(mp, file = "modulePreservation_OldExp.RData");
+```
+
+#### Analysis and Display
+```{r display3}
+ref = 1
+test = 2
+statsObs = cbind(mp$quality$observed[[ref]][[test]][, -1], mp$preservation$observed[[ref]][[test]][, -1])
+statsZ = cbind(mp$quality$Z[[ref]][[test]][, -1], mp$preservation$Z[[ref]][[test]][, -1]);
+
+# Compare preservation to quality:
+print( cbind(statsObs[, c("medianRank.pres", "medianRank.qual")],
+             signif(statsZ[, c("Zsummary.pres", "Zsummary.qual")], 2)) )
+
+# Module labels and module sizes are also contained in the results
+modColors = rownames(mp$preservation$observed[[ref]][[test]])
+moduleSizes = mp$preservation$Z[[ref]][[test]][, 1];
+
+# leave grey and gold modules out
+plotMods = !(modColors %in% c("gold","grey"));
+
+# Text labels for points
+text = modColors[plotMods];
+
+# Auxiliary convenience variable
+plotData = cbind(mp$preservation$observed[[ref]][[test]][, 2], mp$preservation$Z[[ref]][[test]][, 2])
+
+# Plot
+mains = c("Preservation Median rank", "Preservation Zsummary");
+sizeGrWindow(10, 5);
+par(mfrow = c(1,2))
+par(mar = c(4.5,4.5,2.5,1))
+for (p in 1:2)
+{
+  min = min(plotData[, p], na.rm = TRUE);
+  max = max(plotData[, p], na.rm = TRUE);
+  # Adjust ploting ranges appropriately
+  if (p==2)
+  {
+    if (min > -max/10) min = -max/10
+    ylim = c(min - 0.1 * (max-min), max + 0.1 * (max-min))
+  } else
+    ylim = c(max + 0.1 * (max-min), min - 0.1 * (max-min))
+  plot(moduleSizes[plotMods], plotData[plotMods, p], col = 1, bg = modColors[plotMods], pch = 21,
+       main = mains[p],
+       cex = 1.4,
+       ylab = mains[p], xlab = "Module size", log = "x",
+       ylim = ylim,
+       xlim = c(1, 4000), cex.lab = 1.2, cex.axis = 1.2, cex.main =1.4)
+  if (p==2) {
+    abline(h=0)
+    abline(h=2, col = "blue", lty = 2)
+    abline(h=10, col = "darkgreen", lty = 2)
+  } }
+```

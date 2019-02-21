@@ -1,0 +1,168 @@
+---
+title: "Changes in gene DNA methylation and expression networks accompany caste specialization and age-related physiological changes in a social insect"
+author: "Morandin et al."
+date: "19/02/2019"
+output:
+  html_document:
+    theme: cerulean
+    toc: yes
+    toc_depth: 5
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+library(edgeR)
+```
+
+# Differential expression
+## Old Queens vs. Old Workers
+```{r OQW}
+# Input data
+raw.data <- read.table("~/Desktop/DEG_OQW.txt", header = TRUE )
+head(raw.data)
+dim(raw.data)
+summary(raw.data)
+
+# Filtering data
+rownames(raw.data) <- raw.data[,1] 
+counts <- raw.data[,-1]
+treatment=factor(c("Q", "Q", "Q", "Q","W","W","W","W"))
+dge <- DGEList(counts, group=treatment)
+keep <- rowSums(cpm(dge)>1) >= 4
+D <- dge[keep,]
+dim(D)
+
+# DEG analysis
+Dnorm <- calcNormFactors(D)
+Dnorm$samples
+Dc <- estimateCommonDisp(Dnorm,verbose=TRUE)
+Dc$common.dispersion
+d <- estimateTagwiseDisp(Dc, trend="none")
+Dc.test <- exactTest(Dc)
+topTags(Dc.test)
+Dc.table <- topTags( Dc.test, n=nrow(Dc$counts) )$table
+detags <- rownames(topTags(Dc.test))
+summary(decideTestsDGE(Dc.test, p=0.05))
+
+# Figures
+plotBCV(d, cex=0.4)
+Dc.tomark <- rownames( Dc.table )[Dc.table$FDR < 0.05]
+MA<- plotSmear( Dc, de.tags=Dc.tomark, main="Differential expression using the common dispersion")
+abline( h=c(-2,2) , col="dodgerblue" )
+plot(Dc.table$logFC, -log10(Dc.table$PValue), pch=19, cex=0.2)
+plotMDS(d, method="bcv")
+```
+
+## Emerging Queens vs. Emerging Workers
+```{r OQW}
+# Input data
+raw.data <- read.table("~/Desktop/DEG_YQW.txt", header = TRUE )
+head(raw.data)
+dim(raw.data)
+summary(raw.data)
+
+# Filtering data
+rownames(raw.data) <- raw.data[,1] 
+counts <- raw.data[,-1]
+treatment=factor(c("Q", "Q", "Q", "Q","W","W","W","W"))
+dge <- DGEList(counts, group=treatment)
+keep <- rowSums(cpm(dge)>1) >= 4
+D <- dge[keep,]
+dim(D)
+
+# DEG analysis
+Dnorm <- calcNormFactors(D)
+Dnorm$samples
+Dc <- estimateCommonDisp(Dnorm,verbose=TRUE)
+Dc$common.dispersion
+d <- estimateTagwiseDisp(Dc, trend="none")
+Dc.test <- exactTest(Dc)
+topTags(Dc.test)
+Dc.table <- topTags( Dc.test, n=nrow(Dc$counts) )$table
+detags <- rownames(topTags(Dc.test))
+summary(decideTestsDGE(Dc.test, p=0.05))
+
+# Figures
+plotBCV(d, cex=0.4)
+Dc.tomark <- rownames( Dc.table )[Dc.table$FDR < 0.05]
+MA<- plotSmear( Dc, de.tags=Dc.tomark, main="Differential expression using the common dispersion")
+abline( h=c(-2,2) , col="dodgerblue" )
+plot(Dc.table$logFC, -log10(Dc.table$PValue), pch=19, cex=0.2)
+plotMDS(d, method="bcv")
+```
+
+## Old Queens vs. Emerging Queens
+```{r OQW}
+# Input data
+raw.data <- read.table("~/Desktop/DEG_Q.txt", header = TRUE )
+head(raw.data)
+dim(raw.data)
+summary(raw.data)
+
+# Filtering data
+rownames(raw.data) <- raw.data[,1] 
+counts <- raw.data[,-1]
+treatment=factor(c("O", "O", "O", "O","Y","Y","Y","Y"))
+dge <- DGEList(counts, group=treatment)
+keep <- rowSums(cpm(dge)>1) >= 4
+D <- dge[keep,]
+dim(D)
+
+# DEG analysis
+Dnorm <- calcNormFactors(D)
+Dnorm$samples
+Dc <- estimateCommonDisp(Dnorm,verbose=TRUE)
+Dc$common.dispersion
+d <- estimateTagwiseDisp(Dc, trend="none")
+Dc.test <- exactTest(Dc)
+topTags(Dc.test)
+Dc.table <- topTags( Dc.test, n=nrow(Dc$counts) )$table
+detags <- rownames(topTags(Dc.test))
+summary(decideTestsDGE(Dc.test, p=0.05))
+
+# Figures
+plotBCV(d, cex=0.4)
+Dc.tomark <- rownames( Dc.table )[Dc.table$FDR < 0.05]
+MA<- plotSmear( Dc, de.tags=Dc.tomark, main="Differential expression using the common dispersion")
+abline( h=c(-2,2) , col="dodgerblue" )
+plot(Dc.table$logFC, -log10(Dc.table$PValue), pch=19, cex=0.2)
+plotMDS(d, method="bcv")
+```
+
+## Old Workers vs. Emerging Workers
+```{r OQW}
+# Input data
+raw.data <- read.table("~/Desktop/DEG_W.txt", header = TRUE )
+head(raw.data)
+dim(raw.data)
+summary(raw.data)
+
+# Filtering data
+rownames(raw.data) <- raw.data[,1] 
+counts <- raw.data[,-1]
+treatment=factor(c("O", "O", "O", "O","Y","Y","Y","Y"))
+dge <- DGEList(counts, group=treatment)
+keep <- rowSums(cpm(dge)>1) >= 4
+D <- dge[keep,]
+dim(D)
+
+# DEG analysis
+Dnorm <- calcNormFactors(D)
+Dnorm$samples
+Dc <- estimateCommonDisp(Dnorm,verbose=TRUE)
+Dc$common.dispersion
+d <- estimateTagwiseDisp(Dc, trend="none")
+Dc.test <- exactTest(Dc)
+topTags(Dc.test)
+Dc.table <- topTags( Dc.test, n=nrow(Dc$counts) )$table
+detags <- rownames(topTags(Dc.test))
+summary(decideTestsDGE(Dc.test, p=0.05))
+
+# Figures
+plotBCV(d, cex=0.4)
+Dc.tomark <- rownames( Dc.table )[Dc.table$FDR < 0.05]
+MA<- plotSmear( Dc, de.tags=Dc.tomark, main="Differential expression using the common dispersion")
+abline( h=c(-2,2) , col="dodgerblue" )
+plot(Dc.table$logFC, -log10(Dc.table$PValue), pch=19, cex=0.2)
+plotMDS(d, method="bcv")
+```
