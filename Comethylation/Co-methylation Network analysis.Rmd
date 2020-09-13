@@ -8,6 +8,8 @@ output:
     toc: yes
     toc_depth: 5
     toc_float: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -27,9 +29,10 @@ options(stringsAsFactors = FALSE);
 # Co-methylation network analysis
 ## Loading and cleaning the data
 ```{r cleaning}
+setwd("/Users/biplabendudas/Documents/GitHub/formica-methylation/Comethylation/")
 dat1=read.table("Comethylation_input.txt", header=T)
 dim(dat1)
-names(dat1)
+glimpse(dat1)
 datExpr0 = as.data.frame(t(dat1[, -c(1)]));
 names(datExpr0) = dat1$Genes;
 rownames(datExpr0) = names(dat1)[-c(1)];
@@ -56,8 +59,8 @@ if (!gsg$allOK)
 # Cluster the samples to inspect for outlier arrays
 sampleTree = flashClust(dist(datExpr0), method = "average");
 plot(sampleTree, main = "Sample clustering to detect outliers", sub="", xlab="", cex.lab = 1.5,cex.axis = 1.5, cex.main = 2)
-abline(h = 2000, col = "red");
-clust = cutreeStatic(sampleTree, cutHeight = 4000000, minSize = 10)
+abline(h = 2000, col = "red"); ## Q: Where are these heights coming from?
+clust = cutreeStatic(sampleTree, cutHeight = 4000000, minSize = 10) ## Q: Why 4*10^6?
 table(clust)
 keepSamples = (clust==1)
 datExpr = datExpr0[keepSamples, ]
@@ -67,12 +70,13 @@ nSamples = nrow(datExpr)
 
 ### Load trait data
 ```{r trait}
-traitData = read.table("Comethylation_trait.txt", header=T);
+traitData = read.table("./Comethylation_trait.txt", header=T);
 dim(traitData)
 names(traitData)
 allTraits = traitData;
 dim(allTraits)
-names(allTraits)
+glimpse(allTraits)
+summary(allTraits)
 
 # Form a data frame that will hold the traits
 WWDSDRSamples = rownames(datExpr);
@@ -155,7 +159,9 @@ save(MEs, moduleLabels, moduleColors, geneTree, file = "Comethylation_part2.RDat
 ```{r glm}
 ## Input Data ##
 dat<-na.omit(read_tsv("Comethylation_glm.txt"))
+dat %>% head()
 dat.tidy <- dat %>% gather(eigengene, eigenvalue, -ID, -Caste, -Stage) 
+dat.tidy %>% head()
 
 # Bootstrap glm #
 bs <- function(formula, data, indices) {
@@ -165,7 +171,8 @@ bs <- function(formula, data, indices) {
 }
 
 ## M1 ##
-results <-  boot(data=subset(dat.tidy, eigengene == "MEsienna3"), statistic=bs, R=1000, formula=eigenvalue ~ Caste*Stage)
+results <-  boot(data=subset(dat.tidy, eigengene == "M2"), 
+                 statistic=bs, R=1000, formula=eigenvalue ~ Caste*Stage)
 
 # Confidence intervals
 boot.ci(results, type="bca", index=2) # Caste

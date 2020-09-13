@@ -8,9 +8,13 @@ output:
     toc: yes
     toc_depth: 5
     toc_float: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
+rm(list = ls())
+
 library(edgeR)
 ```
 
@@ -18,18 +22,20 @@ library(edgeR)
 ## Old Queens vs. Old Workers
 ```{r OQW}
 # Input data
-raw.data <- read.table("~/Desktop/DEG_OQW.txt", header = TRUE )
+setwd("/Users/biplabendudas/Documents/GitHub/formica-methylation/DEG/")
+raw.data <- read.table("DEG_OQW.txt", header = TRUE )
 head(raw.data)
 dim(raw.data)
 summary(raw.data)
+raw.data %>% glimpse()
 
 # Filtering data
 rownames(raw.data) <- raw.data[,1] 
 counts <- raw.data[,-1]
 treatment=factor(c("Q", "Q", "Q", "Q","W","W","W","W"))
 dge <- DGEList(counts, group=treatment)
-keep <- rowSums(cpm(dge)>1) >= 4
-D <- dge[keep,]
+dgekeep <- rowSums(cpm(dge)>1) >= 4
+D <- dge[dgekeep,]
 dim(D)
 
 # DEG analysis
@@ -56,7 +62,7 @@ plotMDS(d, method="bcv")
 ## Emerging Queens vs. Emerging Workers
 ```{r OQW}
 # Input data
-raw.data <- read.table("~/Desktop/DEG_YQW.txt", header = TRUE )
+raw.data <- read.table("DEG_YQW.txt", header = TRUE )
 head(raw.data)
 dim(raw.data)
 summary(raw.data)
@@ -94,7 +100,7 @@ plotMDS(d, method="bcv")
 ## Old Queens vs. Emerging Queens
 ```{r OQW}
 # Input data
-raw.data <- read.table("~/Desktop/DEG_Q.txt", header = TRUE )
+raw.data <- read.table("DEG_Q.txt", header = TRUE )
 head(raw.data)
 dim(raw.data)
 summary(raw.data)
@@ -132,7 +138,7 @@ plotMDS(d, method="bcv")
 ## Old Workers vs. Emerging Workers
 ```{r OQW}
 # Input data
-raw.data <- read.table("~/Desktop/DEG_W.txt", header = TRUE )
+raw.data <- read.table("DEG_W.txt", header = TRUE )
 head(raw.data)
 dim(raw.data)
 summary(raw.data)
